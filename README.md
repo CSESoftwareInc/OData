@@ -32,7 +32,7 @@ public async Task<IActionResult> Query([FromQuery]ODataFilter queryOptions)
 		responseBuilder.WithCount(data.Count(), totalCount);
 
 	if (queryOptions.Links == true) // Add HATEOS links if requested
-		responseBuilder.WithLinksForPagination(HttpContext, queryOptions.Skip, queryOptions.Take, totalCount);
+		responseBuilder.WithLinksForPagination(HttpContext.Current.Request.Url.AbsoluteUri, HttpContext.Request.Method, queryOptions.Skip, queryOptions.Take, totalCount);
 
 
 	return Ok(responseBuilder.Build());

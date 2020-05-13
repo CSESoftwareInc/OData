@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using CSESoftware.OData.Links;
-using Microsoft.AspNetCore.Http;
 
 namespace CSESoftware.OData
 {
@@ -23,7 +22,6 @@ namespace CSESoftware.OData
         /// Adds data to the response
         /// </summary>
         /// <param name="data"></param>
-        /// <returns></returns>
         public ResponseBuilder WithData(object data)
         {
             _response.Add("data", data);
@@ -35,7 +33,6 @@ namespace CSESoftware.OData
         /// </summary>
         /// <param name="responseCount"></param>
         /// <param name="totalCount"></param>
-        /// <returns></returns>
         public ResponseBuilder WithCount(int responseCount, int totalCount)
         {
             _response.Add("count", new Dictionary<string, int>
@@ -49,16 +46,10 @@ namespace CSESoftware.OData
         /// <summary>
         /// Adds HATEOS link to self
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public ResponseBuilder WithLinkToSelf(HttpContext context)
+        /// <param name="fullPath">Full request path including host, path, and query string</param>
+        /// <param name="requestMethod">HTTP request method (ex. GET)</param>
+        public ResponseBuilder WithLinkToSelf(string fullPath, string requestMethod)
         {
-            var host = context.Request.Host.Value;
-            var path = context.Request.Path.Value;
-            var queryString = context.Request.QueryString.Value;
-            var fullPath = $"{host}{path}{queryString}";
-            var requestMethod = context.Request.Method;
-
             _links.Add(new Link
             {
                 Relation = LinkNames.Self,
@@ -71,19 +62,13 @@ namespace CSESoftware.OData
         /// <summary>
         /// Adds HATEOS links for pagination
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="fullPath">Full request path including host, path, and query string</param>
+        /// <param name="requestMethod">HTTP request method (ex. GET)</param>
         /// <param name="skip">number of records skipped</param>
         /// <param name="take">page size</param>
         /// <param name="totalCount">total number of records across all pages</param>
-        /// <returns></returns>
-        public ResponseBuilder WithLinksForPagination(HttpContext context, int? skip, int? take, int? totalCount)
+        public ResponseBuilder WithLinksForPagination(string fullPath, string requestMethod, int? skip, int? take, int? totalCount)
         {
-            var host = context.Request.Host.Value;
-            var path = context.Request.Path.Value;
-            var queryString = context.Request.QueryString.Value;
-            var fullPath = $"{host}{path}{queryString}";
-            var requestMethod = context.Request.Method;
-
             _links.Add(LinkService.GetLinkToFirstPage(fullPath, skip, requestMethod));
             _links.Add(LinkService.GetLinkToPreviousPage(fullPath, skip, take, requestMethod));
             _links.Add(LinkService.GetLinkToNextPage(fullPath, skip, take, requestMethod));
@@ -115,7 +100,6 @@ namespace CSESoftware.OData
         /// </summary>
         /// <param name="key">property name</param>
         /// <param name="value">property value</param>
-        /// <returns></returns>
         public ResponseBuilder WithProperty(string key, object value)
         {
             _response.Add(key, value);
