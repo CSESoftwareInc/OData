@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CSESoftware.Core.Entity;
+using CSESoftware.OData.Exceptions;
 using CSESoftware.Repository;
 using CSESoftware.Repository.Builder;
 
@@ -33,6 +34,12 @@ namespace CSESoftware.OData
             Expression<Func<TEntity, bool>> baseFilter = null)
             where TEntity : class, IBaseEntity
         {
+            if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
+                throw new OrderingException("You must provide OrderBy if using Skip or Take");
+
+            if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
+                throw new OrderingException("You must provide OrderBy if using ThenBy");
+
             var filterExpression = AndAlso(baseFilter, GenerateExpressionFilter<TEntity>(filter.Filter));
             var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "");
             var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy);
@@ -165,20 +172,27 @@ namespace CSESoftware.OData
 
             foreach (var include in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
             {
-                // Get Subproperty
-                if (include.Contains("/"))
+                try
                 {
-                    var property = include.Split('/')[0];
-                    var subProperty = include.Split('/')[1];
+                    // Get Subproperty
+                    if (include.Contains("/"))
+                    {
+                        var property = include.Split('/')[0];
+                        var subProperty = include.Split('/')[1];
 
-                    var x = Expression.Property(entity, property);
-                    var y = Expression.Property(x, subProperty);
-
-                    includesExpressions.Add(Expression.Lambda<Func<TEntity, object>>(y, entity));
+                        var x = Expression.Property(entity, property);
+                        var y = Expression.Property(x, subProperty);
+                        includesExpressions.Add(Expression.Lambda<Func<TEntity, object>>(y, entity));
+                    }
+                    else
+                    {
+                        includesExpressions.Add(
+                            Expression.Lambda<Func<TEntity, object>>(Expression.Property(entity, include), entity));
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    includesExpressions.Add(Expression.Lambda<Func<TEntity, object>>(Expression.Property(entity, include), entity));
+                    throw new InvalidPropertyException($"Invalid property ({include}) on ({typeof(TEntity).Name})", e);
                 }
             }
             return includesExpressions;
