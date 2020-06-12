@@ -35,10 +35,10 @@ namespace CSESoftware.OData
             where TEntity : class, IBaseEntity
         {
             if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
-                throw new OrderingException("You must provide OrderBy if using Skip or Take");
+                throw new OrderingException("You must provide $orderBy if using $skip or $top");
 
             if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
-                throw new OrderingException("You must provide OrderBy if using ThenBy");
+                throw new OrderingException("You must provide $orderBy if using $thenBy");
 
             var filterExpression = AndAlso(baseFilter, GenerateExpressionFilter<TEntity>(filter.Filter));
             var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "");

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace CSESoftware.OData.QueryBuilder
@@ -67,6 +68,11 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        public QueryBuilder<T> OrderBy(Expression<Func<T, object>> property, bool descending = false)
+		{
+            return OrderBy(GetMemberName(property), descending);
+		}
+
         public QueryBuilder<T> ThenBy(string property, bool descending = false)
         {
             if (descending)
@@ -74,6 +80,11 @@ namespace CSESoftware.OData.QueryBuilder
 
             _openDataFilter.ThenBy = property;
             return this;
+        }
+
+        public QueryBuilder<T> ThenBy(Expression<Func<T, object>> property, bool descending = false)
+		{
+            return ThenBy(GetMemberName(property), descending);
         }
 
         public QueryBuilder<T> Include(string property)
@@ -108,9 +119,28 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
-        public IODataFilter Build()
+        public string Build()
         {
-            return _openDataFilter;
+            var queryStringParameters = new List<string>();
+
+            if (_openDataFilter.Filter != null)
+                queryStringParameters.Add($"$filter={_openDataFilter.Filter}");
+            if (_openDataFilter.Expand != null)
+                queryStringParameters.Add($"$expand={_openDataFilter.Expand}");
+            if (_openDataFilter.OrderBy != null)
+                queryStringParameters.Add($"$orderBy={_openDataFilter.OrderBy}");
+            if (_openDataFilter.ThenBy != null)
+                queryStringParameters.Add($"thenBy={_openDataFilter.ThenBy}");
+            if (_openDataFilter.Skip != null)
+                queryStringParameters.Add($"$skip={_openDataFilter.Skip}");
+            if (_openDataFilter.Take != null)
+                queryStringParameters.Add($"$top={_openDataFilter.Take}");
+            if (_openDataFilter.Count != null)
+                queryStringParameters.Add($"$count={_openDataFilter.Count}");
+            if (_openDataFilter.Links != null)
+                queryStringParameters.Add($"$links={_openDataFilter.Links}");
+
+            return $"?{string.Join("&", queryStringParameters)}";
         }
 
         private string ExpressionToString(Expression<Func<T, object>> property, Operation operation, object value)
@@ -122,6 +152,11 @@ namespace CSESoftware.OData.QueryBuilder
 
             return $"{GetMemberName(property)} {operation.ToOperationString()} {value}";
         }
+
+        private static string GetMemberName(Expression<Func<T, object>> expression)
+		{
+            return GetMemberName(expression.Body);
+		}
 
         private static string GetMemberName(Expression expression)
         {
