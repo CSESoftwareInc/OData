@@ -6,7 +6,7 @@ using CSESoftware.OData.Response;
 namespace CSESoftware.OData
 {
     /// <summary>
-    /// Helps construct your API response
+    /// Tool to construct your API response
     /// </summary>
     public class ResponseBuilder<T> where T : class
     {
@@ -35,7 +35,7 @@ namespace CSESoftware.OData
         /// <param name="totalCount"></param>
         public ResponseBuilder<T> WithCount(int totalCount)
         {
-            _response.Count = new ODataCount
+            _response.Count = new Count
                 {
                     Response = _response.Data.Count(),
                     Total = totalCount
@@ -67,13 +67,12 @@ namespace CSESoftware.OData
         /// <param name="requestMethod">HTTP request method (ex. GET)</param>
         /// <param name="skip">number of records skipped</param>
         /// <param name="take">page size</param>
-        /// <param name="totalCount">total number of records across all pages</param>
-        public ResponseBuilder<T> WithLinksForPagination(string fullPath, string requestMethod, int? skip, int? take, int? totalCount)
+        public ResponseBuilder<T> WithLinksForPagination(string fullPath, string requestMethod, int? skip, int? take)
         {
             _links.Add(LinkService.GetLinkToFirstPage(fullPath, skip, requestMethod));
             _links.Add(LinkService.GetLinkToPreviousPage(fullPath, skip, take, requestMethod));
             _links.Add(LinkService.GetLinkToNextPage(fullPath, skip, take, requestMethod));
-            _links.Add(LinkService.GetLinkToLastPage(fullPath, skip, take, totalCount ?? 0, requestMethod));
+            _links.Add(LinkService.GetLinkToLastPage(fullPath, skip, take, _response?.Count?.Total ?? 0, requestMethod));
 
             return this;
         }

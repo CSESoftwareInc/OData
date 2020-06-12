@@ -9,7 +9,7 @@ namespace CSESoftware.OData.Response
     public class ODataResponse<T> where T : class
     {
         public IEnumerable<T> Data { get; set; }
-        public ODataCount Count { get; set; }
+        public Count Count { get; set; }
         public IEnumerable<Link> Links { get; set; }
     }
 }

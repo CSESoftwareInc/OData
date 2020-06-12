@@ -19,20 +19,19 @@ public async Task<IActionResult> Query([FromQuery]ODataFilter queryOptions)
 	// Calls CSESoftware.Repository with parameters from ODataFilter 
 	var data = await _openDataRepository.GetEntities<Timesheet>(queryOptions);
 
-	// Todo do mapping to view model here
-
-	// Gets the total count without pagination 
-	// This is returned in the response as well as with calculating next/last page links
-	var totalCount = await _openDataRepository.GetTotalCount<Timesheet>(queryOptions);
+	// Todo do your mapping to view model here
 
 	// Start building your response 
 	var responseBuilder = new ResponseBuilder().WithData(data);
 
 	if (queryOptions.Count == true) // Add total and response count if requested
-		responseBuilder.WithCount(data.Count(), totalCount);
+	{
+		var totalCount = await _openDataRepository.GetTotalCount<Timesheet>(queryOptions); // Gets the total count without pagination 
+		responseBuilder.WithCount(totalCount);
+	}
 
 	if (queryOptions.Links == true) // Add HATEOS links if requested
-		responseBuilder.WithLinksForPagination(HttpContext.Current.Request.Url.AbsoluteUri, HttpContext.Request.Method, queryOptions.Skip, queryOptions.Take, totalCount);
+		responseBuilder.WithLinksForPagination(HttpContext.Current.Request.Url.AbsoluteUri, HttpContext.Request.Method, queryOptions.Skip, queryOptions.Take);
 
 
 	return Ok(responseBuilder.Build());
