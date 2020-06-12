@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace CSESoftware.OData.Links
+namespace CSESoftware.OData.Response
 {
     /// <summary>
     /// HATEOS link

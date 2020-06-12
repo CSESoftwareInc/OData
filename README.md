@@ -77,7 +77,11 @@ public async Task<IActionResult> Query([FromQuery]ODataFilter queryOptions)
 | Top (page size) | user?$top=2                                                                  | Gets the first two results from the user request                                                                                        |
 | Skip            | user?$skip=4                                                                 | Get all users, except the first 4 <br> Can be combined with $top to get pages of results                                                |
 | Order by        | user?$orderby=name desc                                                      | Returns all users ordered by name in descending order                                                                                   |
-| Then by         | user?$orderby=city?$thenby=name                                              | Returns all users ordered by city then ordered by name                                                                                  |
+| Then by         | user?$orderby=city&$thenby=name                                              | Returns all users ordered by city then ordered by name                                                                                  |
 | Expand          | timesheet?$expand=project <br> timesheet?$expand=project,employee/department | Includes the project object with each timesheet <br> Includes the project, employee,  and the employee's department with each timesheet |
 | Count           | user?$count=true                                                             | Includes the total count entities in the response                                                                                       |
 | Links           | user?$links=true                                                             | Includes HATEOS links in the response                                                                                                   |
+
+---
+
+CSE Software Inc. is a privately held company founded in 1990. CSE develops software, AR/VR, simulation, mobile, and web technology solutions. The company also offers live, 24x7, global help desk services in 110 languages. All CSE teams are U.S. based with experience in multiple industries, including government, military, healthcare, construction, agriculture, mining, and more. CSE Software is a certified women-owned small business. Visit us online at [csesoftware.com](csesoftware.com).
