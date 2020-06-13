@@ -15,13 +15,12 @@ namespace CSESoftware.OData.QueryBuilder
 
         public QueryBuilder<T> Where(string expression) //todo value range? //todo comments
         {
-            _openDataFilter.Filter += $"({expression})";
+            _openDataFilter.Filter = $"({expression})";
             return this;
         }
         public QueryBuilder<T> Where(Expression<Func<T, object>> property, Operation operation, object value)
         {
-            _openDataFilter.Filter += $"({ExpressionToString(property, operation, value)})";
-            return this;
+            return Where(ExpressionToString(property, operation, value));
         }
 
         public QueryBuilder<T> OrWhere(string expression)
@@ -32,8 +31,7 @@ namespace CSESoftware.OData.QueryBuilder
 
         public QueryBuilder<T> OrWhere(Expression<Func<T, object>> property, Operation operation, object value)
         {
-            _openDataFilter.Filter += $"or ({ExpressionToString(property, operation, value)})";
-            return this;
+            return Where(ExpressionToString(property, operation, value));
         }
 
         public QueryBuilder<T> AndWhere(string expression)
@@ -44,18 +42,30 @@ namespace CSESoftware.OData.QueryBuilder
 
         public QueryBuilder<T> AndWhere(Expression<Func<T, object>> property, Operation operation, object value)
         {
-            _openDataFilter.Filter += $"and ({ExpressionToString(property, operation, value)})";
+            return Where(ExpressionToString(property, operation, value));
+        }
+
+        public QueryBuilder<T> WhereBetween(Expression<Func<T, object>> property, object lowerBound, object upperBound)
+		{
+            _openDataFilter.Filter = $"({ExpressionToString(property, Operation.GreaterThanOrEqualTo, lowerBound)} " +
+                $"and {ExpressionToString(property, Operation.LessThanOrEqualTo, upperBound)})";
+            return this;
+        }
+        public QueryBuilder<T> WhereExcusiveBetween(Expression<Func<T, object>> property, object lowerBound, object upperBound)
+        {
+            _openDataFilter.Filter = $"({ExpressionToString(property, Operation.GreaterThan, lowerBound)} " +
+                $"and {ExpressionToString(property, Operation.LessThan, upperBound)})";
             return this;
         }
 
-        public QueryBuilder<T> WithPageSize(int pageSize)
+        public QueryBuilder<T> Take(int take)
         {
-            _openDataFilter.Take = pageSize;
+            _openDataFilter.Take = take;
             return this;
         }
-        public QueryBuilder<T> SkipPages(int pages)
+        public QueryBuilder<T> Skip(int skip)
         {
-            _openDataFilter.Skip = pages;
+            _openDataFilter.Skip = skip;
             return this;
         }
 
@@ -99,12 +109,7 @@ namespace CSESoftware.OData.QueryBuilder
 
         public QueryBuilder<T> Include(Expression<Func<T, object>> property)
         {
-            _openDataFilter.Expand =
-                string.IsNullOrWhiteSpace(_openDataFilter.Expand)
-                    ? GetMemberName(property)
-                    : $"{_openDataFilter.Expand},{GetMemberName(property)}";
-
-            return this;
+            return Include(GetMemberName(property));
         }
 
         public QueryBuilder<T> WithCount()
@@ -145,9 +150,12 @@ namespace CSESoftware.OData.QueryBuilder
 
         private string ExpressionToString(Expression<Func<T, object>> property, Operation operation, object value)
         {
+            if (value is string)
+                value = $"'{value}'";
+
             if (operation == Operation.Contains)
             {
-                return $"{operation.ToOperationString()}({GetMemberName(property)}, '{value}')";
+                return $"{operation.ToOperationString()}({GetMemberName(property)}, {value})";
             }
 
             return $"{GetMemberName(property)} {operation.ToOperationString()} {value}";
