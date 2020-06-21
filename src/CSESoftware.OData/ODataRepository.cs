@@ -121,8 +121,13 @@ namespace CSESoftware.OData
         /// <returns></returns>
         protected static string ConvertStringsToAppropriateFormat(string filter)
         {
-            var regex = "(?<=[^A-z])\'(?=[A-z])|(?<=[A-z])\'(?=[^A-z'])|(?<=[^A-z])\'(?=[^A-z'])|(?<=[^A-z])\'(?=$)|(?<=[A-z])\'(?=$)|(?<=[, ])\'";
-            filter = Regex.Replace(filter, regex, "\"");
+            filter = filter.Replace(" '", " \"");
+            filter = filter.Replace(",'", ",\"");
+            filter = filter.Replace("('", "(\"");
+            filter = filter.Replace("')", "\")");
+            if(filter.EndsWith("'"))
+                filter = filter.Substring(0, filter.Length - 1) + "\"";
+
             return filter;
         }
 

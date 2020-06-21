@@ -3,9 +3,9 @@
 namespace CSESoftware.OData.Tests
 {
 	[TestClass]
-	public class RegexTests : ODataRepository
+	public class StringConverterTests : ODataRepository
 	{
-		public RegexTests() : base(null) { }
+		public StringConverterTests() : base(null) { }
 
 		[TestMethod]
 		public void EmptyContainsTest()
