@@ -119,7 +119,7 @@ namespace CSESoftware.OData
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        private static string ConvertStringsToAppropriateFormat(string filter)
+        protected static string ConvertStringsToAppropriateFormat(string filter)
         {
             var regex = "(?<=[^A-z])\'(?=[A-z])|(?<=[A-z])\'(?=[^A-z'])|(?<=[^A-z])\'(?=[^A-z'])|(?<=[^A-z])\'(?=$)|(?<=[A-z])\'(?=$)|(?<=[, ])\'";
             filter = Regex.Replace(filter, regex, "\"");
