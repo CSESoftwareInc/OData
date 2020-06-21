@@ -104,7 +104,7 @@ namespace CSESoftware.OData
                 return null;
             }
 
-            filter = filter.Replace("'", "\"");
+            filter = ConvertStringsToAppropriateFormat(filter);
             filter = ConvertDateTimeToAppropriateFormat(filter);
             filter = ConvertContainToAppropriateFormat(filter);
 
@@ -112,6 +112,18 @@ namespace CSESoftware.OData
             var entity = Expression.Parameter(typeof(TEntity), "entity");
             var filterExpression = DynamicExpressionParser.ParseLambda(new[] {entity}, null, filter, null);
             return (Expression<Func<TEntity, bool>>)filterExpression;
+        }
+
+        /// <summary>
+        /// Converts strings in the query to use the correct quotation marks
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        private static string ConvertStringsToAppropriateFormat(string filter)
+        {
+            var regex = "(?<=[^A-z])\'(?=[A-z])|(?<=[A-z])\'(?=[^A-z'])|(?<=[^A-z])\'(?=[^A-z'])|(?<=[^A-z])\'(?=$)|(?<=[A-z])\'(?=$)|(?<=[, ])\'";
+            filter = Regex.Replace(filter, regex, "\"");
+            return filter;
         }
 
         /// <summary>

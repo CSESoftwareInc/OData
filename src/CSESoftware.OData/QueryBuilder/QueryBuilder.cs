@@ -18,6 +18,7 @@ namespace CSESoftware.OData.QueryBuilder
             _openDataFilter.Filter = $"({expression})";
             return this;
         }
+
         public QueryBuilder<T> Where(Expression<Func<T, object>> property, Operation operation, object value)
         {
             return Where(ExpressionToString(property, operation, value));
@@ -25,36 +26,47 @@ namespace CSESoftware.OData.QueryBuilder
 
         public QueryBuilder<T> OrWhere(string expression)
         {
-            _openDataFilter.Filter += $"or ({expression})";
+            if (string.IsNullOrWhiteSpace(_openDataFilter.Filter)) return Where(expression);
+
+            _openDataFilter.Filter += $" or ({expression})";
             return this;
         }
 
         public QueryBuilder<T> OrWhere(Expression<Func<T, object>> property, Operation operation, object value)
         {
-            return Where(ExpressionToString(property, operation, value));
+            return OrWhere(ExpressionToString(property, operation, value));
         }
 
         public QueryBuilder<T> AndWhere(string expression)
         {
-            _openDataFilter.Filter += $"and ({expression})";
+            if (string.IsNullOrWhiteSpace(_openDataFilter.Filter)) return Where(expression);
+
+            _openDataFilter.Filter += $" and ({expression})";
             return this;
         }
 
         public QueryBuilder<T> AndWhere(Expression<Func<T, object>> property, Operation operation, object value)
         {
-            return Where(ExpressionToString(property, operation, value));
+            return AndWhere(ExpressionToString(property, operation, value));
         }
 
         public QueryBuilder<T> WhereBetween(Expression<Func<T, object>> property, object lowerBound, object upperBound)
-		{
+        {
             _openDataFilter.Filter = $"({ExpressionToString(property, Operation.GreaterThanOrEqualTo, lowerBound)} " +
                 $"and {ExpressionToString(property, Operation.LessThanOrEqualTo, upperBound)})";
             return this;
         }
-        public QueryBuilder<T> WhereExcusiveBetween(Expression<Func<T, object>> property, object lowerBound, object upperBound)
+
+        public QueryBuilder<T> WhereExclusiveBetween(Expression<Func<T, object>> property, object lowerBound, object upperBound)
         {
             _openDataFilter.Filter = $"({ExpressionToString(property, Operation.GreaterThan, lowerBound)} " +
                 $"and {ExpressionToString(property, Operation.LessThan, upperBound)})";
+            return this;
+        }
+
+        public QueryBuilder<T> WhereIdIs(object id)
+        {
+            _openDataFilter.Filter = $"Id eq {id}";
             return this;
         }
 
@@ -79,9 +91,9 @@ namespace CSESoftware.OData.QueryBuilder
         }
 
         public QueryBuilder<T> OrderBy(Expression<Func<T, object>> property, bool descending = false)
-		{
+        {
             return OrderBy(GetMemberName(property), descending);
-		}
+        }
 
         public QueryBuilder<T> ThenBy(string property, bool descending = false)
         {
@@ -93,7 +105,7 @@ namespace CSESoftware.OData.QueryBuilder
         }
 
         public QueryBuilder<T> ThenBy(Expression<Func<T, object>> property, bool descending = false)
-		{
+        {
             return ThenBy(GetMemberName(property), descending);
         }
 
@@ -124,6 +136,11 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        public IODataFilter BuildObject()
+		{
+            return _openDataFilter;
+		}
+
         public string Build()
         {
             var queryStringParameters = new List<string>();
@@ -152,6 +169,8 @@ namespace CSESoftware.OData.QueryBuilder
         {
             if (value is string)
                 value = $"'{value}'";
+            if (value is DateTime time)
+                value = time.ToString("O");
 
             if (operation == Operation.Contains)
             {
@@ -162,9 +181,9 @@ namespace CSESoftware.OData.QueryBuilder
         }
 
         private static string GetMemberName(Expression<Func<T, object>> expression)
-		{
+        {
             return GetMemberName(expression.Body);
-		}
+        }
 
         private static string GetMemberName(Expression expression)
         {
