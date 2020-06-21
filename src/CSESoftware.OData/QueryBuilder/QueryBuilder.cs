@@ -13,17 +13,28 @@ namespace CSESoftware.OData.QueryBuilder
             _openDataFilter = new ODataFilter();
         }
 
-        public QueryBuilder<T> Where(string expression) //todo value range? //todo comments
+        /// <summary>
+        /// Set the filter to a string expression in the form of "Parameter Operator Value"
+        /// ex. "Id eq 7"
+        /// </summary>
+        public QueryBuilder<T> Where(string expression)
         {
             _openDataFilter.Filter = $"({expression})";
             return this;
         }
 
+        /// <summary>
+        /// Set the filter based on a property, operation, value
+        /// ex. (x => x.Id, Operation.Equals, 7)
+        /// </summary>
         public QueryBuilder<T> Where(Expression<Func<T, object>> property, Operation operation, object value)
         {
             return Where(ExpressionToString(property, operation, value));
         }
 
+        /// <summary>
+        /// Expand the current filter with an optional where expression
+        /// </summary>
         public QueryBuilder<T> OrWhere(string expression)
         {
             if (string.IsNullOrWhiteSpace(_openDataFilter.Filter)) return Where(expression);
@@ -32,11 +43,17 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Expand the current filter with an optional where expression
+        /// </summary>
         public QueryBuilder<T> OrWhere(Expression<Func<T, object>> property, Operation operation, object value)
         {
             return OrWhere(ExpressionToString(property, operation, value));
         }
 
+        /// <summary>
+        /// Expand the current filter with a required where expression
+        /// </summary>
         public QueryBuilder<T> AndWhere(string expression)
         {
             if (string.IsNullOrWhiteSpace(_openDataFilter.Filter)) return Where(expression);
@@ -45,11 +62,17 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Expand the current filter with a required where expression
+        /// </summary>
         public QueryBuilder<T> AndWhere(Expression<Func<T, object>> property, Operation operation, object value)
         {
             return AndWhere(ExpressionToString(property, operation, value));
         }
 
+        /// <summary>
+        /// Set the filter to search for a range of values including the upper and lower bound
+        /// </summary>
         public QueryBuilder<T> WhereBetween(Expression<Func<T, object>> property, object lowerBound, object upperBound)
         {
             _openDataFilter.Filter = $"({ExpressionToString(property, Operation.GreaterThanOrEqualTo, lowerBound)} " +
@@ -57,6 +80,9 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Set the filter to search for a range of values excluding the upper and lower bound
+        /// </summary>
         public QueryBuilder<T> WhereExclusiveBetween(Expression<Func<T, object>> property, object lowerBound, object upperBound)
         {
             _openDataFilter.Filter = $"({ExpressionToString(property, Operation.GreaterThan, lowerBound)} " +
@@ -64,23 +90,37 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Set the filter to search for a specific ID
+        /// </summary>
         public QueryBuilder<T> WhereIdIs(object id)
         {
             _openDataFilter.Filter = $"Id eq {id}";
             return this;
         }
 
+        /// <summary>
+        /// Set the take value on the filter
+        /// </summary>
         public QueryBuilder<T> Take(int take)
         {
             _openDataFilter.Take = take;
             return this;
         }
+
+        /// <summary>
+        /// Set the skip value of the filter
+        /// </summary>
         public QueryBuilder<T> Skip(int skip)
         {
             _openDataFilter.Skip = skip;
             return this;
         }
 
+        /// <summary>
+        /// Set the property to order the results by
+        /// </summary>
+        /// <param name="descending">True if results should be in descending order</param>
         public QueryBuilder<T> OrderBy(string property, bool descending = false)
         {
             if (descending)
@@ -90,11 +130,19 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Set the property to order the results by
+        /// </summary>
+        /// <param name="descending">True if results should be in descending order</param>
         public QueryBuilder<T> OrderBy(Expression<Func<T, object>> property, bool descending = false)
         {
             return OrderBy(GetMemberName(property), descending);
         }
 
+        /// <summary>
+        /// Set the second property to order the results by
+        /// </summary>
+        /// <param name="descending">True if results should be in descending order</param>
         public QueryBuilder<T> ThenBy(string property, bool descending = false)
         {
             if (descending)
@@ -104,11 +152,18 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Set the second property to order the results by
+        /// </summary>
+        /// <param name="descending">True if results should be in descending order</param>
         public QueryBuilder<T> ThenBy(Expression<Func<T, object>> property, bool descending = false)
         {
             return ThenBy(GetMemberName(property), descending);
         }
 
+        /// <summary>
+        /// Add property to list of objects to expand in the result
+        /// </summary>
         public QueryBuilder<T> Include(string property)
         {
             _openDataFilter.Expand =
@@ -119,28 +174,46 @@ namespace CSESoftware.OData.QueryBuilder
             return this;
         }
 
+        /// <summary>
+        /// Add property to the list of objects to expand in the result
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
         public QueryBuilder<T> Include(Expression<Func<T, object>> property)
         {
             return Include(GetMemberName(property));
         }
 
+        /// <summary>
+        /// Results should include Count
+        /// </summary>
         public QueryBuilder<T> WithCount()
         {
             _openDataFilter.Count = true;
             return this;
         }
 
+        /// <summary>
+        /// Results should include links
+        /// </summary>
         public QueryBuilder<T> WithLinks()
         {
             _openDataFilter.Links = true;
             return this;
         }
 
+        /// <summary>
+        /// Constructs the IOdataFilter object
+        /// </summary>
+        /// <returns></returns>
         public IODataFilter BuildObject()
-		{
+        {
             return _openDataFilter;
-		}
+        }
 
+        /// <summary>
+        /// Constructs the query string that can be used for an API call
+        /// </summary>
         public string Build()
         {
             var queryStringParameters = new List<string>();
