@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CSESoftware.Core.Entity;
 using CSESoftware.OData.Exceptions;
+using CSESoftware.OData.Filter;
 using CSESoftware.Repository;
 using CSESoftware.Repository.Builder;
 
@@ -27,12 +28,9 @@ namespace CSESoftware.OData
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="filter">query string filter</param>
-        /// <param name="baseFilter">optional - applies another filter with query string filter as an AND operation</param>
+        /// <param name="baseFilter">optional - applies another filter as an AND operation to restrict the results</param>
         /// <returns></returns>
-        public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(
-            IODataFilter filter,
-            Expression<Func<TEntity, bool>> baseFilter = null)
-            where TEntity : class, IBaseEntity
+        public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
         {
             if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
                 throw new OrderingException("You must provide $orderBy if using $skip or $top");
@@ -40,16 +38,17 @@ namespace CSESoftware.OData
             if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
                 throw new OrderingException("You must provide $orderBy if using $thenBy");
 
-            var filterExpression = AndAlso(baseFilter, GenerateExpressionFilter<TEntity>(filter.Filter));
-            var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "");
+            var filterExpression = AndAlso(baseFilter.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
+            var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "", baseFilter.Include);
             var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy);
+            var take = GetTake(filter.Take, baseFilter.MaxTake);
 
             var repositoryFilter = new QueryBuilder<TEntity>()
                 .Where(filterExpression)
                 .OrderBy(ordering)
                 .Include(includeExpression)
                 .Skip(filter.Skip)
-                .Take(filter.Take)
+                .Take(take)
                 .Build();
 
             return await _repository.GetAllAsync(repositoryFilter);
@@ -62,9 +61,9 @@ namespace CSESoftware.OData
         /// <param name="filter"></param>
         /// <param name="baseFilter"></param>
         /// <returns></returns>
-        public async Task<int> GetTotalCount<TEntity>(IODataFilter filter, Expression<Func<TEntity, bool>> baseFilter = null) where TEntity : class, IBaseEntity
+        public async Task<int> GetTotalCount<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
         {
-            var expression = AndAlso(baseFilter, GenerateExpressionFilter<TEntity>(filter.Filter ?? ""));
+            var expression = AndAlso(baseFilter.Filter, GenerateExpressionFilter<TEntity>(filter.Filter ?? ""));
             return await _repository.GetCountAsync(expression);
         }
 
@@ -182,7 +181,7 @@ namespace CSESoftware.OData
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="includes"></param>
         /// <returns></returns>
-        private static List<Expression<Func<TEntity, object>>> GenerateIncludeExpression<TEntity>(string includes)
+        private static List<Expression<Func<TEntity, object>>> GenerateIncludeExpression<TEntity>(string includes, List<Expression<Func<TEntity, object>>> baseIncludes)
         {
             var entity = Expression.Parameter(typeof(TEntity), "entity");
             var includesExpressions = new List<Expression<Func<TEntity, object>>>();
@@ -212,7 +211,7 @@ namespace CSESoftware.OData
                     throw new InvalidPropertyException($"Invalid property ({include}) on ({typeof(TEntity).Name})", e);
                 }
             }
-            return includesExpressions;
+            return includesExpressions; //todo Add() baseIncludes and filter out duplicates
         }
 
         /// <summary>
@@ -233,5 +232,13 @@ namespace CSESoftware.OData
 
             return x => x.OrderBy(orderBy).ThenBy(thenBy);
         }
+
+        private static int? GetTake(int? take, int? maxTake)
+		{
+            if (take == null) return null;
+            if (maxTake == null) return take;
+
+            return take > maxTake ? maxTake : take;
+		}
     }
 }
