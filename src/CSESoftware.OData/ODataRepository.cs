@@ -40,7 +40,7 @@ namespace CSESoftware.OData
 
             var filterExpression = AndAlso(baseFilter.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
             var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "", baseFilter.Include);
-            var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy);
+            var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy, baseFilter.OrderBy);
             var take = GetTake(filter.Take, baseFilter.MaxTake);
 
             var repositoryFilter = new QueryBuilder<TEntity>()
@@ -221,9 +221,10 @@ namespace CSESoftware.OData
         /// <param name="orderBy"></param>
         /// <param name="thenBy"></param>
         /// <returns></returns>
-        private static Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> GenerateOrderingExpression<TEntity>(string orderBy, string thenBy)
+        private static Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> GenerateOrderingExpression<TEntity>(string orderBy, string thenBy,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> defaultOrder)
         {
-            if (orderBy == null) return null;
+            if (orderBy == null) return defaultOrder;
 
             if (thenBy == null)
             {
@@ -234,11 +235,11 @@ namespace CSESoftware.OData
         }
 
         private static int? GetTake(int? take, int? maxTake)
-		{
+        {
             if (take == null) return null;
             if (maxTake == null) return take;
 
             return take > maxTake ? maxTake : take;
-		}
+        }
     }
 }
