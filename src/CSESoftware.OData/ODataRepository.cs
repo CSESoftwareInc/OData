@@ -28,7 +28,7 @@ namespace CSESoftware.OData
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="filter">query string filter</param>
-        /// <param name="baseFilter">optional - applies another filter as an AND operation to restrict the results</param>
+        /// <param name="baseFilter">optional - applies base filtering, ordering, and includes to the query</param>
         /// <returns></returns>
         public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
         {
@@ -39,7 +39,7 @@ namespace CSESoftware.OData
                 throw new OrderingException("You must provide $orderBy if using $thenBy");
 
             var filterExpression = AndAlso(baseFilter.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
-            var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "", baseFilter.Include);
+            var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand, baseFilter.Include);
             var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy, baseFilter.DefaultOrder);
             var take = GetTake(filter.Take, baseFilter.MaxTake);
 
