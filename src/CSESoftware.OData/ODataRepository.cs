@@ -75,13 +75,16 @@ namespace CSESoftware.OData
             if (left == null) return right;
             if (right == null) return left;
 
-            var parameter = Expression.Parameter(typeof(TEntity), "entity");
-            var body = Expression.AndAlso(
-                Expression.Invoke(left, parameter),
-                Expression.Invoke(right, parameter)
-            );
-            var lambda = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
-            return lambda;
+            var parameter = Expression.Parameter(typeof(TEntity));
+
+            var leftVisitor = new ReplaceExpressionVisitor(left.Parameters[0], parameter);
+            var leftExpression = leftVisitor.Visit(left.Body);
+
+            var rightVisitor = new ReplaceExpressionVisitor(right.Parameters[0], parameter);
+            var rightExpression = rightVisitor.Visit(right.Body);
+
+            return Expression.Lambda<Func<TEntity, bool>>(
+                Expression.AndAlso(leftExpression, rightExpression), parameter);
         }
 
         /// <summary>
