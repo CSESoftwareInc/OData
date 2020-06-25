@@ -40,7 +40,7 @@ namespace CSESoftware.OData
 
             var filterExpression = AndAlso(baseFilter.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
             var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "", baseFilter.Include);
-            var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy, baseFilter.OrderBy);
+            var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy, baseFilter.DefaultOrder);
             var take = GetTake(filter.Take, baseFilter.MaxTake);
 
             var repositoryFilter = new QueryBuilder<TEntity>()

@@ -1,4 +1,4 @@
-﻿namespace CSESoftware.OData.QueryBuilder
+﻿namespace CSESoftware.OData.Builder
 {
     public enum Operation
     {
