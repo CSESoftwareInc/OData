@@ -183,11 +183,17 @@ namespace CSESoftware.OData
         /// <returns></returns>
         private static List<Expression<Func<TEntity, object>>> GenerateIncludeExpression<TEntity>(string includes, List<Expression<Func<TEntity, object>>> baseIncludes)
         {
+            var includesExpressions = baseIncludes;
+
+            if (string.IsNullOrWhiteSpace(includes)) return includesExpressions;
+
+            var baseIncludeNames = baseIncludes.Select(GetObjectType).Select(x => x.Name).ToList();
             var entity = Expression.Parameter(typeof(TEntity), "entity");
-            var includesExpressions = new List<Expression<Func<TEntity, object>>>();
 
             foreach (var include in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
             {
+                if (baseIncludeNames.Contains(include)) continue;
+
                 try
                 {
                     // Get Subproperty
@@ -211,7 +217,7 @@ namespace CSESoftware.OData
                     throw new InvalidPropertyException($"Invalid property ({include}) on ({typeof(TEntity).Name})", e);
                 }
             }
-            return includesExpressions; //todo Add() baseIncludes and filter out duplicates
+            return includesExpressions;
         }
 
         /// <summary>
@@ -240,6 +246,18 @@ namespace CSESoftware.OData
             if (maxTake == null) return take;
 
             return take > maxTake ? maxTake : take;
+        }
+
+        public static Type GetObjectType<T>(Expression<Func<T, object>> expression)
+        {
+            if ((expression.Body.NodeType == ExpressionType.Convert) ||
+                (expression.Body.NodeType == ExpressionType.ConvertChecked))
+            {
+                var unary = expression.Body as UnaryExpression;
+                if (unary != null)
+                    return unary.Operand.Type;
+            }
+            return expression.Body.Type;
         }
     }
 }
