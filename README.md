@@ -22,7 +22,7 @@ public async Task<IActionResult> Query([FromQuery]ODataFilter queryOptions)
 	// Todo do your mapping to view model here
 
 	// Start building your response 
-	var responseBuilder = new ResponseBuilder().WithData(data);
+	var responseBuilder = new ResponseBuilder<Timesheet>().WithData(data);
 
 	if (queryOptions.Count == true) // Add total and response count if requested
 	{

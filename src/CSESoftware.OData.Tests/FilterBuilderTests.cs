@@ -111,5 +111,35 @@ namespace CSESoftware.OData.Tests
 
             Assert.AreEqual("(CreatedDate gt 2015-03-14T09:26:53.0000000)", filter.Filter);
         }
+
+        [TestMethod]
+        public void OrderByTest()
+        {
+            var filter = new ODataFilterBuilder<Timesheet>()
+                .OrderBy(x => x.StartTime)
+                .BuildObject();
+
+            Assert.AreEqual("StartTime", filter.OrderBy);
+        }
+
+        [TestMethod]
+        public void OrderByDescendingTest()
+        {
+            var filter = new ODataFilterBuilder<Timesheet>()
+                .OrderBy(x => x.StartTime, true)
+                .BuildObject();
+
+            Assert.AreEqual("StartTime desc", filter.OrderBy);
+        }
+
+        [TestMethod]
+        public void OrderByChildPropertyTest()
+        {
+            var filter = new ODataFilterBuilder<Timesheet>()
+                .OrderBy(x => x.Employee.Name)
+                .BuildObject();
+
+            Assert.AreEqual("Employee.Name", filter.OrderBy);
+        }
     }
 }

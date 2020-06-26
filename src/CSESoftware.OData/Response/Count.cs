@@ -1,8 +1,13 @@
-﻿namespace CSESoftware.OData.Response
+﻿using Newtonsoft.Json;
+
+namespace CSESoftware.OData.Response
 {
     public class Count
     {
-        public int Total { get; set; }
+        [JsonProperty("response")]
         public int Response { get; set; }
+
+        [JsonProperty("total")]
+        public int Total { get; set; }
     }
 }

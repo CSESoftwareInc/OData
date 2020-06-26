@@ -38,10 +38,10 @@ namespace CSESoftware.OData
             if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
                 throw new OrderingException("You must provide $orderBy if using $thenBy");
 
-            var filterExpression = AndAlso(baseFilter.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
-            var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand, baseFilter.Include);
-            var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy, baseFilter.DefaultOrder);
-            var take = GetTake(filter.Take, baseFilter.MaxTake);
+            var filterExpression = AndAlso(baseFilter?.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
+            var includeExpression = GenerateIncludeExpression(filter.Expand, baseFilter?.Include);
+            var ordering = GenerateOrderingExpression(filter.OrderBy, filter.ThenBy, baseFilter?.DefaultOrder);
+            var take = GetTake(filter.Take, baseFilter?.MaxTake);
 
             var repositoryFilter = new QueryBuilder<TEntity>()
                 .Where(filterExpression)
@@ -63,7 +63,7 @@ namespace CSESoftware.OData
         /// <returns></returns>
         public async Task<int> GetTotalCount<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
         {
-            var expression = AndAlso(baseFilter.Filter, GenerateExpressionFilter<TEntity>(filter.Filter ?? ""));
+            var expression = AndAlso(baseFilter?.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
             return await _repository.GetCountAsync(expression);
         }
 
@@ -245,7 +245,7 @@ namespace CSESoftware.OData
 
         private static int? GetTake(int? take, int? maxTake)
         {
-            if (take == null) return null;
+            if (take == null) return maxTake;
             if (maxTake == null) return take;
 
             return take > maxTake ? maxTake : take;

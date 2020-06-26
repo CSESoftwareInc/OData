@@ -259,20 +259,10 @@ namespace CSESoftware.OData.Builder
 
         private static string GetMemberName(Expression<Func<T, object>> expression)
         {
-            return GetMemberName(expression.Body);
-        }
-
-        private static string GetMemberName(Expression expression)
-        {
-            switch (expression.NodeType)
-            {
-                case ExpressionType.MemberAccess:
-                    return ((MemberExpression)expression).Member.Name;
-                case ExpressionType.Convert:
-                    return GetMemberName(((UnaryExpression)expression).Operand);
-                default:
-                    throw new NotSupportedException(expression.NodeType.ToString());
-            }
+            var body = expression.Body.ToString();
+            var index = body.IndexOf('.') + 1;
+            return body.Substring(index, body.Length - index)
+                .Replace(", Object)", "");
         }
     }
 }
