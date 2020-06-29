@@ -1,4 +1,6 @@
-﻿namespace CSESoftware.OData.Links
+﻿using CSESoftware.OData.Response;
+
+namespace CSESoftware.OData.Links
 {
     internal class LinkService
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace CSESoftware.OData
+namespace CSESoftware.OData.Filter
 {
     public class ODataFilter : IODataFilter
     {

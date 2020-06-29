@@ -1,4 +1,4 @@
-﻿namespace CSESoftware.OData
+﻿namespace CSESoftware.OData.Filter
 {
     /// <summary>
     /// Filter object to be received by your controller

@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CSESoftware.Core.Entity;
+using CSESoftware.OData.Exceptions;
+using CSESoftware.OData.Filter;
 using CSESoftware.Repository;
 using CSESoftware.Repository.Builder;
 
@@ -26,23 +28,27 @@ namespace CSESoftware.OData
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="filter">query string filter</param>
-        /// <param name="baseFilter">optional - applies another filter with query string filter as an AND operation</param>
+        /// <param name="baseFilter">optional - applies base filtering, ordering, and includes to the query</param>
         /// <returns></returns>
-        public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(
-            IODataFilter filter,
-            Expression<Func<TEntity, bool>> baseFilter = null)
-            where TEntity : class, IBaseEntity
+        public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
         {
-            var filterExpression = AndAlso(baseFilter, GenerateExpressionFilter<TEntity>(filter.Filter));
-            var includeExpression = GenerateIncludeExpression<TEntity>(filter.Expand ?? "");
-            var ordering = GenerateOrderingExpression<TEntity>(filter.OrderBy, filter.ThenBy);
+            if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
+                throw new OrderingException("You must provide $orderBy if using $skip or $top");
+
+            if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
+                throw new OrderingException("You must provide $orderBy if using $thenBy");
+
+            var filterExpression = AndAlso(baseFilter?.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
+            var includeExpression = GenerateIncludeExpression(filter.Expand, baseFilter?.Include);
+            var ordering = GenerateOrderingExpression(filter.OrderBy, filter.ThenBy, baseFilter?.DefaultOrder);
+            var take = GetTake(filter.Take, baseFilter?.MaxTake);
 
             var repositoryFilter = new QueryBuilder<TEntity>()
                 .Where(filterExpression)
                 .OrderBy(ordering)
                 .Include(includeExpression)
                 .Skip(filter.Skip)
-                .Take(filter.Take)
+                .Take(take)
                 .Build();
 
             return await _repository.GetAllAsync(repositoryFilter);
@@ -55,9 +61,9 @@ namespace CSESoftware.OData
         /// <param name="filter"></param>
         /// <param name="baseFilter"></param>
         /// <returns></returns>
-        public async Task<int> GetTotalCount<TEntity>(IODataFilter filter, Expression<Func<TEntity, bool>> baseFilter = null) where TEntity : class, IBaseEntity
+        public async Task<int> GetTotalCount<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
         {
-            var expression = AndAlso(baseFilter, GenerateExpressionFilter<TEntity>(filter.Filter ?? ""));
+            var expression = AndAlso(baseFilter?.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
             return await _repository.GetCountAsync(expression);
         }
 
@@ -75,13 +81,16 @@ namespace CSESoftware.OData
             if (left == null) return right;
             if (right == null) return left;
 
-            var parameter = Expression.Parameter(typeof(TEntity), "entity");
-            var body = Expression.AndAlso(
-                Expression.Invoke(left, parameter),
-                Expression.Invoke(right, parameter)
-            );
-            var lambda = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
-            return lambda;
+            var parameter = Expression.Parameter(typeof(TEntity));
+
+            var leftVisitor = new ReplaceExpressionVisitor(left.Parameters[0], parameter);
+            var leftExpression = leftVisitor.Visit(left.Body);
+
+            var rightVisitor = new ReplaceExpressionVisitor(right.Parameters[0], parameter);
+            var rightExpression = rightVisitor.Visit(right.Body);
+
+            return Expression.Lambda<Func<TEntity, bool>>(
+                Expression.AndAlso(leftExpression, rightExpression), parameter);
         }
 
         /// <summary>
@@ -97,7 +106,7 @@ namespace CSESoftware.OData
                 return null;
             }
 
-            filter = filter.Replace("'", "\"");
+            filter = ConvertStringsToAppropriateFormat(filter);
             filter = ConvertDateTimeToAppropriateFormat(filter);
             filter = ConvertContainToAppropriateFormat(filter);
 
@@ -105,6 +114,23 @@ namespace CSESoftware.OData
             var entity = Expression.Parameter(typeof(TEntity), "entity");
             var filterExpression = DynamicExpressionParser.ParseLambda(new[] {entity}, null, filter, null);
             return (Expression<Func<TEntity, bool>>)filterExpression;
+        }
+
+        /// <summary>
+        /// Converts strings in the query to use the correct quotation marks
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        protected static string ConvertStringsToAppropriateFormat(string filter)
+        {
+            filter = filter.Replace(" '", " \"");
+            filter = filter.Replace(",'", ",\"");
+            filter = filter.Replace("('", "(\"");
+            filter = filter.Replace("')", "\")");
+            if(filter.EndsWith("'"))
+                filter = filter.Substring(0, filter.Length - 1) + "\"";
+
+            return filter;
         }
 
         /// <summary>
@@ -158,27 +184,40 @@ namespace CSESoftware.OData
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="includes"></param>
         /// <returns></returns>
-        private static List<Expression<Func<TEntity, object>>> GenerateIncludeExpression<TEntity>(string includes)
+        private static List<Expression<Func<TEntity, object>>> GenerateIncludeExpression<TEntity>(string includes, List<Expression<Func<TEntity, object>>> baseIncludes)
         {
+            var includesExpressions = baseIncludes;
+
+            if (string.IsNullOrWhiteSpace(includes)) return includesExpressions;
+
+            var baseIncludeNames = baseIncludes.Select(GetObjectType).Select(x => x.Name).ToList();
             var entity = Expression.Parameter(typeof(TEntity), "entity");
-            var includesExpressions = new List<Expression<Func<TEntity, object>>>();
 
             foreach (var include in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
             {
-                // Get Subproperty
-                if (include.Contains("/"))
+                if (baseIncludeNames.Contains(include)) continue;
+
+                try
                 {
-                    var property = include.Split('/')[0];
-                    var subProperty = include.Split('/')[1];
+                    // Get Subproperty
+                    if (include.Contains("/"))
+                    {
+                        var property = include.Split('/')[0];
+                        var subProperty = include.Split('/')[1];
 
-                    var x = Expression.Property(entity, property);
-                    var y = Expression.Property(x, subProperty);
-
-                    includesExpressions.Add(Expression.Lambda<Func<TEntity, object>>(y, entity));
+                        var x = Expression.Property(entity, property);
+                        var y = Expression.Property(x, subProperty);
+                        includesExpressions.Add(Expression.Lambda<Func<TEntity, object>>(y, entity));
+                    }
+                    else
+                    {
+                        includesExpressions.Add(
+                            Expression.Lambda<Func<TEntity, object>>(Expression.Property(entity, include), entity));
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    includesExpressions.Add(Expression.Lambda<Func<TEntity, object>>(Expression.Property(entity, include), entity));
+                    throw new InvalidPropertyException($"Invalid property ({include}) on ({typeof(TEntity).Name})", e);
                 }
             }
             return includesExpressions;
@@ -191,9 +230,10 @@ namespace CSESoftware.OData
         /// <param name="orderBy"></param>
         /// <param name="thenBy"></param>
         /// <returns></returns>
-        private static Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> GenerateOrderingExpression<TEntity>(string orderBy, string thenBy)
+        private static Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> GenerateOrderingExpression<TEntity>(string orderBy, string thenBy,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> defaultOrder)
         {
-            if (orderBy == null) return null;
+            if (orderBy == null) return defaultOrder;
 
             if (thenBy == null)
             {
@@ -201,6 +241,26 @@ namespace CSESoftware.OData
             }
 
             return x => x.OrderBy(orderBy).ThenBy(thenBy);
+        }
+
+        private static int? GetTake(int? take, int? maxTake)
+        {
+            if (take == null) return maxTake;
+            if (maxTake == null) return take;
+
+            return take > maxTake ? maxTake : take;
+        }
+
+        public static Type GetObjectType<T>(Expression<Func<T, object>> expression)
+        {
+            if ((expression.Body.NodeType == ExpressionType.Convert) ||
+                (expression.Body.NodeType == ExpressionType.ConvertChecked))
+            {
+                var unary = expression.Body as UnaryExpression;
+                if (unary != null)
+                    return unary.Operand.Type;
+            }
+            return expression.Body.Type;
         }
     }
 }
