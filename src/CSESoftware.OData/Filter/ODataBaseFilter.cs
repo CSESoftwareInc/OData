@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace CSESoftware.OData.Filter
 {
-    public class ODataBaseFilter<TEntity> : IODataBaseFilter<TEntity> where TEntity : class, IBaseEntity
+    public class ODataBaseFilter<TEntity> : IODataBaseFilter<TEntity> where TEntity : class, IEntity
     {
         public Expression<Func<TEntity, bool>> Filter { get; set; }
         public Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> DefaultOrder { get; set; }

@@ -8,9 +8,9 @@ namespace CSESoftware.OData
     public interface IODataRepository
     {
         Task<IEnumerable<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null)
-            where TEntity : class, IBaseEntity;
+            where TEntity : class, IEntity;
 
         Task<int> GetTotalCount<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null)
-            where TEntity : class, IBaseEntity;
+            where TEntity : class, IEntity;
     }
 }

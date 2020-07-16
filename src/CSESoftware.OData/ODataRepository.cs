@@ -30,7 +30,7 @@ namespace CSESoftware.OData
         /// <param name="filter">query string filter</param>
         /// <param name="baseFilter">optional - applies base filtering, ordering, and includes to the query</param>
         /// <returns></returns>
-        public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
+        public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IEntity
         {
             if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
                 throw new OrderingException("You must provide $orderBy if using $skip or $top");
@@ -61,7 +61,7 @@ namespace CSESoftware.OData
         /// <param name="filter"></param>
         /// <param name="baseFilter"></param>
         /// <returns></returns>
-        public async Task<int> GetTotalCount<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IBaseEntity
+        public async Task<int> GetTotalCount<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IEntity
         {
             var expression = AndAlso(baseFilter?.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
             return await _repository.GetCountAsync(expression);
