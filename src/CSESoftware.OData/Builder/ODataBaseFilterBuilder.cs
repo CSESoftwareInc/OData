@@ -7,7 +7,7 @@ using CSESoftware.OData.Filter;
 
 namespace CSESoftware.OData.Builder
 {
-    public class ODataBaseFilterBuilder<TEntity> where TEntity : class, IBaseEntity
+    public class ODataBaseFilterBuilder<TEntity> where TEntity : class, IEntity
     {
         private readonly IODataBaseFilter<TEntity> _baseFilter;
 
