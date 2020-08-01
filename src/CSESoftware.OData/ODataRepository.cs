@@ -108,6 +108,8 @@ namespace CSESoftware.OData
 
             filter = ConvertStringsToAppropriateFormat(filter);
             filter = ConvertDateTimeToAppropriateFormat(filter);
+            filter = ConvertAnyToAppropriateFormat(filter);
+            filter = ConvertAllToAppropriateFormat(filter);
             filter = ConvertContainToAppropriateFormat(filter);
 
             // Parameterize and make lambda expression
@@ -162,7 +164,6 @@ namespace CSESoftware.OData
         {
             const string subStringPattern = @"contains\(.*?,";
             var regex = new Regex(subStringPattern, RegexOptions.IgnoreCase);
-
             var matches = regex.Matches(filter);
 
             foreach (var match in matches)
@@ -174,6 +175,36 @@ namespace CSESoftware.OData
 
                 filter = filter.Replace(matchText, $"{columnName}.Contains(");
             }
+
+            return filter;
+        }
+
+        private static string ConvertAnyToAppropriateFormat(string filter)
+        {
+            const string subStringPattern = @"\/any\((.*):\1\/";
+            var regex = new Regex(subStringPattern, RegexOptions.IgnoreCase);
+            var matches = regex.Matches(filter);
+
+            foreach (var match in matches)
+            {
+                var matchText = match.ToString();
+                filter = filter.Replace(matchText, ".any(x => x.");
+            }
+
+            return filter;
+        }
+
+        private static string ConvertAllToAppropriateFormat(string filter)
+        {
+            const string subStringPattern = @"\/all\((.*):\1\/";
+            var regex = new Regex(subStringPattern, RegexOptions.IgnoreCase);
+            var matches = regex.Matches(filter);
+
+            foreach (var match in matches)
+            {
+                var matchText = match.ToString();
+                filter = filter.Replace(matchText, ".all(x => x.");
+              }
 
             return filter;
         }
