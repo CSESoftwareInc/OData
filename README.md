@@ -67,8 +67,8 @@ public async Task<IActionResult> Query([FromQuery]ODataFilter queryOptions)
 | Or                         | user?$filter=city eq 'PEORIA' or city eq 'DENVER'                                | Returns all users with city of either "PEORIA" or "DENVER"                                                       |
 | Select a range of values   | user?$filter=percent gt 40 and percent lt 70                                     | Returns all users with percent values from 40-70                                                                 |
 | Contains                   | user?$filter=contains(name, 'Cameron')                                           | Returns all users who's name contains "Cameron"                                                                  |
-| Any                        | user?$filter=timesheets\any() <br> user?$filter=timesheets\any(t:t/Id gt 73)     | Returns all users who have any timesheets <br> Returns all users who have a timesheet with an Id greater than 73 |
-| All                        | user?$filter=timesheets\all(t:t/Id gt 73)                                        | Returns all users who's timesheets all have an Id greater than 73                                                |
+| Any                        | user?$filter=timesheets/any() <br> user?$filter=timesheets\any(t:t/Id gt 73)     | Returns all users who have any timesheets <br> Returns all users who have a timesheet with an Id greater than 73 |
+| All                        | user?$filter=timesheets/all(t:t/Id gt 73)                                        | Returns all users who's timesheets all have an Id greater than 73                                                |
 
 
 ## Other Operations
