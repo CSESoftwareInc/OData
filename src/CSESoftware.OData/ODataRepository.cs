@@ -191,7 +191,8 @@ namespace CSESoftware.OData
                 filter = filter.Replace(matchText, ".any(x => x.");
             }
 
-            return filter;
+            var emptyAny = new Regex(@"\/any\(\)", RegexOptions.IgnoreCase);
+            return emptyAny.Replace(filter, ".any()");
         }
 
         private static string ConvertAllToAppropriateFormat(string filter)
@@ -206,7 +207,8 @@ namespace CSESoftware.OData
                 filter = filter.Replace(matchText, ".all(x => x.");
               }
 
-            return filter;
+            var emptyAll = new Regex(@"\/all\(\)", RegexOptions.IgnoreCase);
+            return emptyAll.Replace(filter, ".all()");
         }
 
         /// <summary>
