@@ -108,6 +108,8 @@ namespace CSESoftware.OData
 
             filter = ConvertStringsToAppropriateFormat(filter);
             filter = ConvertDateTimeToAppropriateFormat(filter);
+            filter = ConvertAnyToAppropriateFormat(filter);
+            filter = ConvertAllToAppropriateFormat(filter);
             filter = ConvertContainToAppropriateFormat(filter);
 
             // Parameterize and make lambda expression
@@ -154,7 +156,7 @@ namespace CSESoftware.OData
         }
 
         /// <summary>
-        /// Converts Contains operations from OData format to Dynamic Linq format
+        /// Converts "Contains" operations from OData format to Dynamic Linq format
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
@@ -162,7 +164,6 @@ namespace CSESoftware.OData
         {
             const string subStringPattern = @"contains\(.*?,";
             var regex = new Regex(subStringPattern, RegexOptions.IgnoreCase);
-
             var matches = regex.Matches(filter);
 
             foreach (var match in matches)
@@ -179,18 +180,61 @@ namespace CSESoftware.OData
         }
 
         /// <summary>
+        /// Converts "Any" operations from OData format to Dynamic Linq format
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        private static string ConvertAnyToAppropriateFormat(string filter)
+        {
+            const string subStringPattern = @"\/any\((.*):\1\/";
+            var regex = new Regex(subStringPattern, RegexOptions.IgnoreCase);
+            var matches = regex.Matches(filter);
+
+            foreach (var match in matches)
+            {
+                var matchText = match.ToString();
+                filter = filter.Replace(matchText, ".any(x => x.");
+            }
+
+            var emptyAny = new Regex(@"\/any\(\)", RegexOptions.IgnoreCase);
+            return emptyAny.Replace(filter, ".any()");
+        }
+
+        /// <summary>
+        /// Converts "All" operations from OData format to Dynamic Linq format
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        private static string ConvertAllToAppropriateFormat(string filter)
+        {
+            const string subStringPattern = @"\/all\((.*):\1\/";
+            var regex = new Regex(subStringPattern, RegexOptions.IgnoreCase);
+            var matches = regex.Matches(filter);
+
+            foreach (var match in matches)
+            {
+                var matchText = match.ToString();
+                filter = filter.Replace(matchText, ".all(x => x.");
+            }
+
+            var emptyAll = new Regex(@"\/all\(\)", RegexOptions.IgnoreCase);
+            return emptyAll.Replace(filter, ".all()");
+        }
+
+        /// <summary>
         /// Convert string includes to include functions
         /// </summary>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="includes"></param>
+        /// <param name="baseIncludes"></param>
         /// <returns></returns>
         private static List<Expression<Func<TEntity, object>>> GenerateIncludeExpression<TEntity>(string includes, List<Expression<Func<TEntity, object>>> baseIncludes)
         {
-            var includesExpressions = baseIncludes;
+            var includesExpressions = baseIncludes ?? new List<Expression<Func<TEntity, object>>>();
 
             if (string.IsNullOrWhiteSpace(includes)) return includesExpressions;
 
-            var baseIncludeNames = baseIncludes.Select(GetObjectType).Select(x => x.Name).ToList();
+            var baseIncludeNames = baseIncludes?.Select(GetObjectType).Select(x => x.Name).ToList() ?? new List<string>();
             var entity = Expression.Parameter(typeof(TEntity), "entity");
 
             foreach (var include in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
@@ -229,6 +273,7 @@ namespace CSESoftware.OData
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="orderBy"></param>
         /// <param name="thenBy"></param>
+        /// <param name="defaultOrder"></param>
         /// <returns></returns>
         private static Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> GenerateOrderingExpression<TEntity>(string orderBy, string thenBy,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> defaultOrder)
