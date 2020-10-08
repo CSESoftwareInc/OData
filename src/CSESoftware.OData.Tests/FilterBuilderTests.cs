@@ -9,6 +9,17 @@ namespace CSESoftware.OData.Tests
     public class FilterBuilderTests
     {
         [TestMethod]
+        public void WithMixedObjectTypes()
+        {
+            var filter = new ODataFilterBuilder<Timesheet>()
+                .Where(x => x.Comment, Operation.Contains, "great")
+                .AndWhere(x => x.EmployeeId, Operation.Equals, 1)
+                .BuildObject();
+
+            Assert.AreEqual("(contains(Comment, 'great') and (EmployeeId) eq 1)", filter.Filter);
+        }
+
+        [TestMethod]
         public void WithIdBuildTest()
         {
             var filter = new ODataFilterBuilder<Timesheet>()
