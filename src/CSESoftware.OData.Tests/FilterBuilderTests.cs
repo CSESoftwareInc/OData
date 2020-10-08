@@ -12,11 +12,11 @@ namespace CSESoftware.OData.Tests
         public void WithMixedObjectTypes()
         {
             var filter = new ODataFilterBuilder<Timesheet>()
-                .Where(x => x.Comment, Operation.Contains, "great")
-                .AndWhere(x => x.EmployeeId, Operation.Equals, 1)
+                .Where(x => x.Comment, Operation.Contains, "m22")
+                .AndWhere(x => x.EmployeeId, Operation.Equals, 5)
                 .BuildObject();
 
-            Assert.AreEqual("(contains(Comment, 'great') and (EmployeeId) eq 1)", filter.Filter);
+            Assert.AreEqual("(contains(Comment, 'm22')) and (EmployeeId eq 5)", filter.Filter);
         }
 
         [TestMethod]
