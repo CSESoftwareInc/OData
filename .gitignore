@@ -35,4 +35,4 @@ msbuild.wrn
 
 # Visual Studio
 .vs/
- 
+src/packages/

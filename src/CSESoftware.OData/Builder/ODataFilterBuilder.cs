@@ -260,6 +260,10 @@ namespace CSESoftware.OData.Builder
         private static string GetMemberName(Expression<Func<T, object>> expression)
         {
             var body = expression.Body.ToString();
+
+            if (body.StartsWith("Convert(") && !body.EndsWith(", Object)"))
+                body = body.Substring(0, body.Length - 1);
+
             var index = body.IndexOf('.') + 1;
             return body.Substring(index, body.Length - index)
                 .Replace(", Object)", "");
