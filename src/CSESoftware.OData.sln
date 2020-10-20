@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSESoftware.OData", "CSESoftware.OData\CSESoftware.OData.csproj", "{9968E918-97D1-4C65-9BBE-5F2BED8D6557}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSESoftware.OData.Tests", "CSESoftware.OData.Tests\CSESoftware.OData.Tests.csproj", "{A40CA528-716F-4A51-97AF-4664420B418B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSESoftware.OData.Tests", "CSESoftware.OData.Tests\CSESoftware.OData.Tests.csproj", "{A40CA528-716F-4A51-97AF-4664420B418B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSESoftware.OData.FrameworkTests", "CSESoftware.OData.FrameworkTests\CSESoftware.OData.FrameworkTests.csproj", "{F9C562F0-6195-4997-B423-A7B373B28EB2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{A40CA528-716F-4A51-97AF-4664420B418B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A40CA528-716F-4A51-97AF-4664420B418B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A40CA528-716F-4A51-97AF-4664420B418B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9C562F0-6195-4997-B423-A7B373B28EB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9C562F0-6195-4997-B423-A7B373B28EB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9C562F0-6195-4997-B423-A7B373B28EB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9C562F0-6195-4997-B423-A7B373B28EB2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
