@@ -242,7 +242,7 @@ namespace CSESoftware.OData.Builder
             return $"?{string.Join("&", queryStringParameters)}";
         }
 
-        private string ExpressionToString(Expression<Func<T, object>> property, Operation operation, object value)
+        private static string ExpressionToString(Expression<Func<T, object>> property, Operation operation, object value)
         {
             if (value is string)
                 value = $"'{value}'";

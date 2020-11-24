@@ -29,14 +29,33 @@ namespace CSESoftware.OData
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="filter">query string filter</param>
         /// <param name="baseFilter">optional - applies base filtering, ordering, and includes to the query</param>
-        /// <returns></returns>
-        public async Task<IEnumerable<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IEntity
+        public async Task<List<TEntity>> GetEntities<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IEntity
         {
-            if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
-                throw new OrderingException("You must provide $orderBy if using $skip or $top");
+            var repositoryFilter = GetQuery(filter, baseFilter).Build();
+            return await _repository.GetAllAsync(repositoryFilter);
+        }
 
-            if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
-                throw new OrderingException("You must provide $orderBy if using $thenBy");
+        /// <summary>
+        /// Get entities from the repository by the filter object
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <typeparam name="TOut"></typeparam>
+        /// <param name="filter">query string filter</param>
+        /// <param name="select">adds a select statement to the query to return a different object structure</param>
+        /// <param name="baseFilter">optional - applies base filtering, ordering, and includes to the query</param>
+        public async Task<List<TOut>> GetEntities<TEntity, TOut>(IODataFilter filter, Expression<Func<TEntity, TOut>> select, IODataBaseFilter<TEntity> baseFilter = null)
+            where TEntity : class, IEntity
+        {
+            var repositoryFilter = GetQuery(filter, baseFilter)
+                .Select(select)
+                .Build();
+
+            return await _repository.GetAllWithSelectAsync(repositoryFilter);
+        }
+
+        private static QueryBuilder<TEntity> GetQuery<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IEntity
+        {
+            ValidateFilter(filter);
 
             var filterExpression = AndAlso(baseFilter?.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
             var includeExpression = GenerateIncludeExpression(filter.Expand, baseFilter?.Include);
@@ -48,10 +67,18 @@ namespace CSESoftware.OData
                 .OrderBy(ordering)
                 .Include(includeExpression)
                 .Skip(filter.Skip)
-                .Take(take)
-                .Build();
+                .Take(take);
 
-            return await _repository.GetAllAsync(repositoryFilter);
+            return repositoryFilter;
+        }
+
+        private static void ValidateFilter(IODataFilter filter)
+        {
+            if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
+                throw new OrderingException("You must provide $orderBy if using $skip or $top");
+
+            if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
+                throw new OrderingException("You must provide $orderBy if using $thenBy");
         }
 
         /// <summary>
