@@ -1,4 +1,9 @@
-﻿using System;
+﻿using CSESoftware.Core.Entity;
+using CSESoftware.OData.Exceptions;
+using CSESoftware.OData.Filter;
+using CSESoftware.Repository;
+using CSESoftware.Repository.Builder;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -6,11 +11,6 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using CSESoftware.Core.Entity;
-using CSESoftware.OData.Exceptions;
-using CSESoftware.OData.Filter;
-using CSESoftware.Repository;
-using CSESoftware.Repository.Builder;
 
 namespace CSESoftware.OData
 {
@@ -53,9 +53,10 @@ namespace CSESoftware.OData
             return await _repository.GetAllWithSelectAsync(repositoryFilter);
         }
 
-        private static QueryBuilder<TEntity> GetQuery<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null) where TEntity : class, IEntity
+        private static QueryBuilder<TEntity> GetQuery<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter = null)
+            where TEntity : class, IEntity
         {
-            ValidateFilter(filter);
+            ValidateFilter(filter, baseFilter);
 
             var filterExpression = AndAlso(baseFilter?.Filter, GenerateExpressionFilter<TEntity>(filter.Filter));
             var includeExpression = GenerateIncludeExpression(filter.Expand, baseFilter?.Include);
@@ -72,9 +73,10 @@ namespace CSESoftware.OData
             return repositoryFilter;
         }
 
-        private static void ValidateFilter(IODataFilter filter)
+        private static void ValidateFilter<TEntity>(IODataFilter filter, IODataBaseFilter<TEntity> baseFilter)
+            where TEntity : class, IEntity
         {
-            if ((filter.Skip != null || filter.Take != null) && string.IsNullOrWhiteSpace(filter.OrderBy))
+            if ((filter.Skip != null || filter.Take != null) && (string.IsNullOrWhiteSpace(filter.OrderBy) && baseFilter?.DefaultOrder == null))
                 throw new OrderingException("You must provide $orderBy if using $skip or $top");
 
             if (!string.IsNullOrWhiteSpace(filter.ThenBy) && string.IsNullOrWhiteSpace(filter.OrderBy))
