@@ -128,7 +128,7 @@ namespace CSESoftware.OData
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="filter"></param>
         /// <returns></returns>
-        private static Expression<Func<TEntity, bool>> GenerateExpressionFilter<TEntity>(string filter)
+        protected static Expression<Func<TEntity, bool>> GenerateExpressionFilter<TEntity>(string filter)
         {
             if (string.IsNullOrEmpty(filter))
             {
@@ -154,6 +154,7 @@ namespace CSESoftware.OData
         /// <returns></returns>
         protected static string ConvertStringsToAppropriateFormat(string filter)
         {
+            filter = filter.Replace("\"", "\\\"");
             filter = filter.Replace(" '", " \"");
             filter = filter.Replace(",'", ",\"");
             filter = filter.Replace("('", "(\"");
