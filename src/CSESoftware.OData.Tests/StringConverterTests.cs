@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CSESoftware.OData.Tests.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CSESoftware.OData.Tests
 {
@@ -105,6 +106,30 @@ namespace CSESoftware.OData.Tests
             var filter = "Text eq 'don't we'll'";
             filter = ConvertStringsToAppropriateFormat(filter);
             Assert.AreEqual("Text eq \"don't we'll\"", filter);
+        }
+
+        [TestMethod]
+        public void WhereWithQuotes()
+        {
+            var filter = "Text eq 'he said \"yes\"'";
+            filter = ConvertStringsToAppropriateFormat(filter);
+            Assert.AreEqual("Text eq \"he said \\\"yes\\\"\"", filter);
+        }
+
+        [TestMethod]
+        public void WhereWithStartAndEndQuotes()
+        {
+            var filter = "Name eq '\"Bob\"'";
+            var expression = GenerateExpressionFilter<Employee>(filter);
+            Assert.AreEqual("(entity.Name == \"\"Bob\"\")", expression.Body.ToString());
+        }
+
+        [TestMethod]
+        public void FullExpressionTest()
+        {
+            var filter = "Name eq 'Bob'";
+            var expression = GenerateExpressionFilter<Employee>(filter);
+            Assert.AreEqual("(entity.Name == \"Bob\")", expression.Body.ToString());
         }
     }
 }
