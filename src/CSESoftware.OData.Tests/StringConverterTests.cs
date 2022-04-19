@@ -131,5 +131,13 @@ namespace CSESoftware.OData.Tests
             var expression = GenerateExpressionFilter<Employee>(filter);
             Assert.AreEqual("(entity.Name == \"Bob\")", expression.Body.ToString());
         }
+
+        [TestMethod]
+        public void TwoStringExpressionsTest()
+        {
+            var filter = "Name eq 'Bob' and Address eq 'Boo'";
+            var expression = GenerateExpressionFilter<Employee>(filter);
+            Assert.AreEqual("((entity.Name == \"Bob\") AndAlso (entity.Address == \"Boo\"))", expression.Body.ToString());
+        }
     }
 }
