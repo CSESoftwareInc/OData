@@ -156,6 +156,7 @@ namespace CSESoftware.OData
         {
             filter = filter.Replace("\"", "\\\"");
             filter = filter.Replace(" '", " \"");
+            filter = filter.Replace("' ", "\" ");
             filter = filter.Replace(",'", ",\"");
             filter = filter.Replace("('", "(\"");
             filter = filter.Replace("')", "\")");
