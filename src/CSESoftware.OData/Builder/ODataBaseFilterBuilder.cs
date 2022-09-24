@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using CSESoftware.Core.Entity;
 using CSESoftware.OData.Filter;
+using System.Threading;
 
 namespace CSESoftware.OData.Builder
 {
@@ -67,6 +68,17 @@ namespace CSESoftware.OData.Builder
         public ODataBaseFilterBuilder<TEntity> WithMaxTake(int? maxTake)
         {
             _baseFilter.MaxTake = maxTake;
+            return this;
+        }
+
+        /// <summary>
+        /// Set the cancellation token to be used when cancelling queries
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public ODataBaseFilterBuilder<TEntity> WithThisCancellationToken(CancellationToken cancellationToken)
+        {
+            _baseFilter.CancellationToken = cancellationToken;
             return this;
         }
 
