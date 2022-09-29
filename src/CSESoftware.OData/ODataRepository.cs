@@ -10,6 +10,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSESoftware.OData
@@ -68,7 +69,8 @@ namespace CSESoftware.OData
                 .OrderBy(ordering)
                 .Include(includeExpression)
                 .Skip(filter.Skip)
-                .Take(take);
+                .Take(take)
+                .WithThisCancellationToken(baseFilter?.CancellationToken ?? CancellationToken.None);
 
             return repositoryFilter;
         }
