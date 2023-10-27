@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.3.3</Version>
+    <Version>2.3.4</Version>
     <Authors>CSE Software, Inc.</Authors>
-    <Copyright>2022 CSE Software, Inc.</Copyright>
+    <Copyright>2023 CSE Software, Inc.</Copyright>
     <Description>Library to convert Open Data REST API queries into queries for CSESoftware.Repository.</Description>
     <PackageIcon>packageIcon.png</PackageIcon>
     <PackageIconUrl />
@@ -22,8 +22,8 @@
     <PackageReference Include="CSESoftware.Core" Version="2.0.0" />
     <PackageReference Include="CSESoftware.Repository" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.18" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.5" />
   </ItemGroup>
 
   <ItemGroup>
