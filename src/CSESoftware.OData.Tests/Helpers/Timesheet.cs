@@ -1,5 +1,4 @@
 ﻿using CSESoftware.Core.Entity;
-using System;
 
 namespace CSESoftware.OData.Tests.Helpers
 {

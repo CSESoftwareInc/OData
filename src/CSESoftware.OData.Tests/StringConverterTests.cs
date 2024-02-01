@@ -1,143 +1,141 @@
 ﻿using CSESoftware.OData.Tests.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CSESoftware.OData.Tests
 {
-    [TestClass]
     public class StringConverterTests : ODataRepository
     {
         public StringConverterTests() : base(null) { }
 
-        [TestMethod]
+        [Fact]
         public void EmptyContainsTest()
         {
             var filter = "contains(Text, '')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text, \"\")", filter);
+            Assert.Equal("contains(Text, \"\")", filter);
 
             filter = "contains(Text,'')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text,\"\")", filter);
+            Assert.Equal("contains(Text,\"\")", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void RegularContainsTest()
         {
             var filter = "contains(Text, 'search')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text, \"search\")", filter);
+            Assert.Equal("contains(Text, \"search\")", filter);
 
             filter = "contains(Text,'search')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text,\"search\")", filter);
+            Assert.Equal("contains(Text,\"search\")", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void ContainsEndingInApostropheTest()
         {
             var filter = "contains(Text, 'don'')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text, \"don'\")", filter);
+            Assert.Equal("contains(Text, \"don'\")", filter);
 
             filter = "contains(Text,'don'')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text,\"don'\")", filter);
+            Assert.Equal("contains(Text,\"don'\")", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void ContainsWithApostropheTest()
         {
             var filter = "contains(Text, 'don't')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text, \"don't\")", filter);
+            Assert.Equal("contains(Text, \"don't\")", filter);
 
             filter = "contains(Text,'don't')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text,\"don't\")", filter);
+            Assert.Equal("contains(Text,\"don't\")", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void ContainsWithMultipleApostrophesTest()
         {
             var filter = "contains(Text, 'don't we'll')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text, \"don't we'll\")", filter);
+            Assert.Equal("contains(Text, \"don't we'll\")", filter);
 
             filter = "contains(Text,'don't we'll')";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("contains(Text,\"don't we'll\")", filter);
+            Assert.Equal("contains(Text,\"don't we'll\")", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void EmptyWhere()
         {
             var filter = "Text eq ''";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("Text eq \"\"", filter);
+            Assert.Equal("Text eq \"\"", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void RegularWhere()
         {
             var filter = "Text eq 'search'";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("Text eq \"search\"", filter);
+            Assert.Equal("Text eq \"search\"", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void WhereEndingInApostropheTest()
         {
             var filter = "Text eq 'don''";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("Text eq \"don'\"", filter);
+            Assert.Equal("Text eq \"don'\"", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void WhereWithApostrophe()
         {
             var filter = "Text eq 'don't'";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("Text eq \"don't\"", filter);
+            Assert.Equal("Text eq \"don't\"", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void WhereWithMultipleApostrophes()
         {
             var filter = "Text eq 'don't we'll'";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("Text eq \"don't we'll\"", filter);
+            Assert.Equal("Text eq \"don't we'll\"", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void WhereWithQuotes()
         {
             var filter = "Text eq 'he said \"yes\"'";
             filter = ConvertStringsToAppropriateFormat(filter);
-            Assert.AreEqual("Text eq \"he said \\\"yes\\\"\"", filter);
+            Assert.Equal("Text eq \"he said \\\"yes\\\"\"", filter);
         }
 
-        [TestMethod]
+        [Fact]
         public void WhereWithStartAndEndQuotes()
         {
             var filter = "Name eq '\"Bob\"'";
             var expression = GenerateExpressionFilter<Employee>(filter);
-            Assert.AreEqual("(entity.Name == \"\"Bob\"\")", expression.Body.ToString());
+            Assert.Equal("(entity.Name == \"\"Bob\"\")", expression.Body.ToString());
         }
 
-        [TestMethod]
+        [Fact]
         public void FullExpressionTest()
         {
             var filter = "Name eq 'Bob'";
             var expression = GenerateExpressionFilter<Employee>(filter);
-            Assert.AreEqual("(entity.Name == \"Bob\")", expression.Body.ToString());
+            Assert.Equal("(entity.Name == \"Bob\")", expression.Body.ToString());
         }
 
-        [TestMethod]
+        [Fact]
         public void TwoStringExpressionsTest()
         {
             var filter = "Name eq 'Bob' and Address eq 'Boo'";
             var expression = GenerateExpressionFilter<Employee>(filter);
-            Assert.AreEqual("((entity.Name == \"Bob\") AndAlso (entity.Address == \"Boo\"))", expression.Body.ToString());
+            Assert.Equal("((entity.Name == \"Bob\") AndAlso (entity.Address == \"Boo\"))", expression.Body.ToString());
         }
     }
 }
